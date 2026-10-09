@@ -1,0 +1,5 @@
+# runtime / data
+**/db_data/
+*.log
+# Catatan: .env berisi secret LAB. Di repo nyata, JANGAN commit .env;
+# sediakan .env.example dan isi secret via CI/secret manager.

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>BAB II - Threat Modeling STRIDE - Portal Akademik</title>
+<style>
+  @page { size: A4 portrait; margin: 16mm 14mm 16mm 14mm; }
+  @page landscape { size: A4 landscape; margin: 12mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1f2d3d; font-size: 11px; line-height: 1.5; margin: 0;
+  }
+  h1 { font-size: 21px; color: #0f2b46; margin: 0 0 2px; }
+  h2 { font-size: 15px; color: #0f2b46; margin: 20px 0 8px;
+       border-bottom: 2px solid #2d6cdf; padding-bottom: 3px; }
+  h3 { font-size: 12.5px; color: #173d63; margin: 14px 0 6px; }
+  p { margin: 6px 0; }
+  .subtitle { color: #6b7a8d; font-size: 11px; margin: 2px 0 0; }
+  .meta { color: #6b7a8d; font-size: 10px; font-style: italic; margin: 4px 0 0; }
+  .rule { height: 3px; background: linear-gradient(90deg,#0f2b46,#2d6cdf); border: none; margin: 10px 0 4px; border-radius: 2px; }
+  ul { margin: 6px 0; padding-left: 18px; }
+  li { margin: 3px 0; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 10px; }
+  a { color: #1b5fbf; text-decoration: none; }
+
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 10px; }
+  th, td { border: 1px solid #cfd8e3; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #0f2b46; color: #fff; font-weight: 600; font-size: 10px; }
+  tbody tr:nth-child(even) { background: #f4f7fb; }
+  .center { text-align: center; }
+
+  /* Matriks besar - landscape */
+  .landscape { page: landscape; }
+  .matrix { font-size: 8.5px; }
+  .matrix th, .matrix td { padding: 4px 5px; }
+  .matrix td.c { text-align: center; white-space: nowrap; }
+
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-weight: 700;
+           font-size: 8.5px; color: #fff; white-space: nowrap; }
+  .kritis { background: #c0271f; }
+  .tinggi { background: #e07a1a; }
+  .sedang { background: #d4a017; }
+  .tid { font-weight: 700; color: #b5271f; white-space: nowrap; }
+
+  figure { margin: 8px 0 4px; text-align: center; }
+  figure img { width: 100%; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; }
+  figcaption { font-size: 9.5px; color: #6b7a8d; margin-top: 4px; }
+
+  .note { background: #eaf2ff; border: 1px solid #c9dcf6; border-radius: 6px; padding: 8px 10px; font-size: 10px; margin: 8px 0; }
+  .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+  .page-break { break-before: page; page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>BAB II — Dokumen Threat Modeling (STRIDE)</h1>
+<p class="subtitle"><strong>Sistem:</strong> Portal Akademik — Universitas Nusantara</p>
+<p class="meta">Kondisi yang dimodelkan: BEFORE HARDENING · Project UTS Advanced Information Security System</p>
+<hr class="rule">
+
+<figure class="avoid-break">
+  <img src="DFD-portal-akademik.png" alt="DFD Portal Akademik">
+  <figcaption>Gambar 2.1 — Data Flow Diagram (Level 1) Portal Akademik dengan Trust Boundary (TB-1/2/3) dan titik ancaman T1–T10.</figcaption>
+</figure>
+
+<h2>2.1 Ruang Lingkup &amp; Asumsi</h2>
+<ul>
+  <li><strong>Aset yang dilindungi:</strong> (1) kredensial akun (<code>users</code>), (2) data pribadi mahasiswa/PII (<code>mahasiswa</code>), (3) nilai akademik (<code>nilai</code>), (4) integritas sesi &amp; otorisasi.</li>
+  <li><strong>Aktor:</strong> Mahasiswa (pengguna sah), Administrator (pengelola), Aktor Ancaman (penyerang tak sah — dari internet maupun akun mahasiswa yang menyalahgunakan hak).</li>
+  <li><strong>Batasan sistem:</strong> aplikasi web Portal Akademik + reverse proxy + database, dijalankan pada lingkungan lab (docker-compose). Layanan pihak ketiga di luar cakupan.</li>
+  <li><strong>Metodologi:</strong> STRIDE-per-element dan STRIDE-per-interaction, difokuskan pada aliran yang <strong>melintasi Trust Boundary</strong> (TB-1 Internet⇄DMZ, TB-2 DMZ⇄App, TB-3 App⇄Data).</li>
+</ul>
+
+<h2 class="avoid-break">2.2 Inventaris Elemen DFD</h2>
+<table class="avoid-break">
+  <thead><tr><th>Tipe</th><th>ID</th><th>Elemen</th><th>Trust Zone</th></tr></thead>
+  <tbody>
+    <tr><td>External Entity</td><td>EE1</td><td>Mahasiswa</td><td>Internet (untrusted)</td></tr>
+    <tr><td>External Entity</td><td>EE2</td><td>Administrator</td><td>Internet (untrusted)</td></tr>
+    <tr><td>External Entity</td><td>EE3</td><td>Aktor Ancaman</td><td>Internet (untrusted)</td></tr>
+    <tr><td>Process</td><td>P1</td><td>Reverse Proxy (Nginx)</td><td>DMZ</td></tr>
+    <tr><td>Process</td><td>P2</td><td>Autentikasi &amp; Manajemen Sesi (<code>login.php</code>)</td><td>App Tier</td></tr>
+    <tr><td>Process</td><td>P3</td><td>Layanan KHS (<code>nilai.php</code>)</td><td>App Tier</td></tr>
+    <tr><td>Process</td><td>P4</td><td>Direktori Mahasiswa (<code>search.php</code>)</td><td>App Tier</td></tr>
+    <tr><td>Process</td><td>P5</td><td>Panel Admin (<code>admin.php</code>)</td><td>App Tier</td></tr>
+    <tr><td>Data Store</td><td>D1</td><td><code>users</code> (kredensial, role)</td><td>Data Tier</td></tr>
+    <tr><td>Data Store</td><td>D2</td><td><code>mahasiswa</code> (PII)</td><td>Data Tier</td></tr>
+    <tr><td>Data Store</td><td>D3</td><td><code>nilai</code> (KHS)</td><td>Data Tier</td></tr>
+  </tbody>
+</table>
+
+<h2 class="avoid-break">2.3 STRIDE-per-Element (Matriks Keberlakuan)</h2>
+<p>Tanda ✔ = kategori ancaman relevan. (S=Spoofing, T=Tampering, R=Repudiation, I=Information Disclosure, D=Denial of Service, E=Elevation of Privilege)</p>
+<table class="avoid-break">
+  <thead><tr><th>Elemen</th><th class="center">S</th><th class="center">T</th><th class="center">R</th><th class="center">I</th><th class="center">D</th><th class="center">E</th></tr></thead>
+  <tbody>
+    <tr><td>EE1 Mahasiswa</td><td class="center">✔</td><td></td><td class="center">✔</td><td></td><td></td><td></td></tr>
+    <tr><td>EE2 Administrator</td><td class="center">✔</td><td></td><td class="center">✔</td><td></td><td></td><td></td></tr>
+    <tr><td>P1 Reverse Proxy</td><td class="center">✔</td><td class="center">✔</td><td></td><td class="center">✔</td><td class="center">✔</td><td></td></tr>
+    <tr><td>P2 Autentikasi/Sesi</td><td class="center">✔</td><td class="center">✔</td><td class="center">✔</td><td class="center">✔</td><td class="center">✔</td><td class="center">✔</td></tr>
+    <tr><td>P3 Layanan KHS</td><td></td><td class="center">✔</td><td></td><td class="center">✔</td><td></td><td class="center">✔</td></tr>
+    <tr><td>P4 Direktori/Search</td><td></td><td class="center">✔</td><td></td><td class="center">✔</td><td></td><td class="center">✔</td></tr>
+    <tr><td>P5 Panel Admin</td><td></td><td class="center">✔</td><td class="center">✔</td><td class="center">✔</td><td></td><td class="center">✔</td></tr>
+    <tr><td>D1 users</td><td></td><td class="center">✔</td><td></td><td class="center">✔</td><td></td><td></td></tr>
+    <tr><td>D2 mahasiswa</td><td></td><td class="center">✔</td><td></td><td class="center">✔</td><td></td><td></td></tr>
+    <tr><td>D3 nilai</td><td></td><td class="center">✔</td><td></td><td class="center">✔</td><td></td><td></td></tr>
+    <tr><td>Data flow (TB-1/TB-3)</td><td class="center">✔</td><td class="center">✔</td><td></td><td class="center">✔</td><td class="center">✔</td><td></td></tr>
+  </tbody>
+</table>
+
+<h2 class="avoid-break">2.4 Metodologi Skoring Risiko</h2>
+<p>Risiko = <strong>Likelihood × Impact</strong> (skala kualitatif Rendah/Sedang/Tinggi).</p>
+<table class="avoid-break" style="max-width:460px">
+  <thead><tr><th>Likelihood \ Impact</th><th class="center">Rendah</th><th class="center">Sedang</th><th class="center">Tinggi</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Tinggi</strong></td><td class="center"><span class="badge sedang">Sedang</span></td><td class="center"><span class="badge tinggi">Tinggi</span></td><td class="center"><span class="badge kritis">Kritis</span></td></tr>
+    <tr><td><strong>Sedang</strong></td><td class="center">Rendah</td><td class="center"><span class="badge sedang">Sedang</span></td><td class="center"><span class="badge tinggi">Tinggi</span></td></tr>
+    <tr><td><strong>Rendah</strong></td><td class="center">Rendah</td><td class="center">Rendah</td><td class="center"><span class="badge sedang">Sedang</span></td></tr>
+  </tbody>
+</table>
+
+<div class="landscape page-break">
+<h2>2.5 Matriks Risiko STRIDE (Threat Register)</h2>
+<p>Kolom <strong>Celah</strong> merujuk nomor pada VULN.md. Singkatan: L=Likelihood, I=Impact; R=Rendah, S=Sedang, T=Tinggi. Terpenuhi 10 titik ancaman (syarat minimal 5).</p>
+<table class="matrix">
+  <thead>
+    <tr>
+      <th>ID</th><th>Kategori STRIDE</th><th>Lokasi (DFD)</th><th>Ancaman / Skenario Serangan</th>
+      <th class="center">L</th><th class="center">I</th><th class="center">Risiko</th><th>Dampak Bisnis</th><th class="center">Celah</th><th>Mitigasi (Hardening)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="tid">T1</td><td>Spoofing, Tampering</td><td>Flow 1 → P2 (TB-1)</td>
+      <td><strong>SQL Injection auth bypass</strong> pada login (<code>admin' --</code>, <code>' OR '1'='1' --</code>) → masuk sebagai admin tanpa password</td>
+      <td class="c">T</td><td class="c">T</td><td class="c"><span class="badge kritis">KRITIS</span></td>
+      <td>Pengambilalihan akun admin; kendali penuh atas data akademik</td><td class="c">V1</td>
+      <td>Prepared statement (<code>bind_param</code>); WAF ModSecurity CRS</td>
+    </tr>
+    <tr>
+      <td class="tid">T2</td><td>Information Disclosure</td><td>D1 users</td>
+      <td><strong>Hash password lemah (MD5, tanpa salt)</strong> → di-crack via rainbow table/hashcat setelah bocor</td>
+      <td class="c">T</td><td class="c">T</td><td class="c"><span class="badge kritis">KRITIS</span></td>
+      <td>Kredensial seluruh pengguna terekspos; pelanggaran privasi</td><td class="c">V2</td>
+      <td><code>password_hash()</code> Argon2id; migrasi hash; enkripsi at-rest</td>
+    </tr>
+    <tr>
+      <td class="tid">T3</td><td>Spoofing, DoS</td><td>Flow 1 → P2 (TB-1)</td>
+      <td><strong>Brute force / credential stuffing</strong> — tanpa rate-limit, lockout, atau MFA</td>
+      <td class="c">T</td><td class="c">S</td><td class="c"><span class="badge tinggi">TINGGI</span></td>
+      <td>Akun lemah jebol; layanan login terbebani</td><td class="c">V3</td>
+      <td>Fail2ban + lockout; IAM Authelia/Keycloak + MFA (TOTP) di reverse proxy</td>
+    </tr>
+    <tr>
+      <td class="tid">T4</td><td>Elevation of Privilege, Info Disclosure</td><td>Flow 4 → P3 (TB-2/3)</td>
+      <td><strong>IDOR</strong> — mahasiswa mengganti <code>nilai.php?nim=</code> untuk melihat KHS mahasiswa lain</td>
+      <td class="c">T</td><td class="c">S</td><td class="c"><span class="badge tinggi">TINGGI</span></td>
+      <td>Kebocoran nilai antar mahasiswa; pelanggaran kerahasiaan</td><td class="c">V4</td>
+      <td>Abaikan <code>?nim</code> untuk non-admin; pakai <code>$_SESSION['nim']</code>; cek kepemilikan (ABAC)</td>
+    </tr>
+    <tr>
+      <td class="tid">T5</td><td>Information Disclosure, Tampering</td><td>Flow 5 → P4 → D1/D2 (TB-3)</td>
+      <td><strong>SQL Injection (UNION)</strong> pada pencarian → dump tabel <code>users</code>/PII</td>
+      <td class="c">T</td><td class="c">T</td><td class="c"><span class="badge kritis">KRITIS</span></td>
+      <td>Kebocoran massal kredensial &amp; PII; potensi sanksi hukum</td><td class="c">V5</td>
+      <td>Prepared statement; WAF; akun DB privilege minimal</td>
+    </tr>
+    <tr>
+      <td class="tid">T6</td><td>Elevation of Privilege</td><td>Flow 6 → P5 (TB-2)</td>
+      <td><strong>Broken Access Control</strong> — <code>/admin.php</code> bisa dibuka mahasiswa biasa (tidak ada cek role)</td>
+      <td class="c">T</td><td class="c">T</td><td class="c"><span class="badge kritis">KRITIS</span></td>
+      <td>Akses panel admin oleh non-admin; kebocoran seluruh akun &amp; PII</td><td class="c">V6</td>
+      <td>RBAC: verifikasi <code>role==='admin'</code>, jika tidak 403; default-deny</td>
+    </tr>
+    <tr>
+      <td class="tid">T7</td><td>Info Disclosure, Tampering</td><td>Flow 1/2 (TB-1)</td>
+      <td><strong>Trafik HTTP tanpa TLS</strong> → sniffing kredensial &amp; sesi (Wireshark/MITM)</td>
+      <td class="c">S</td><td class="c">T</td><td class="c"><span class="badge tinggi">TINGGI</span></td>
+      <td>Penyadapan kredensial di jaringan; session hijack</td><td class="c">V7</td>
+      <td>TLS/HTTPS (redirect 80→443); HSTS</td>
+    </tr>
+    <tr>
+      <td class="tid">T8</td><td>Information Disclosure</td><td>P1, P2, P4</td>
+      <td><strong>Kebocoran pesan error &amp; banner</strong> (error SQL/PHP, versi server) memudahkan penyusunan serangan</td>
+      <td class="c">S</td><td class="c">S</td><td class="c"><span class="badge sedang">SEDANG</span></td>
+      <td>Reconnaissance dipermudah; mempercepat eksploitasi</td><td class="c">V8</td>
+      <td><code>display_errors=Off</code>; pesan generik; <code>server_tokens off</code></td>
+    </tr>
+    <tr>
+      <td class="tid">T9</td><td>Tampering, EoP</td><td>D1–D3 / TB-3</td>
+      <td><strong>Attack surface berlebih &amp; kredensial DB lemah</strong> — port 3306 terekspos, password <code>root123</code>/<code>portal123</code></td>
+      <td class="c">S</td><td class="c">T</td><td class="c"><span class="badge tinggi">TINGGI</span></td>
+      <td>Akses langsung ke database; manipulasi/penghapusan data</td><td class="c">V9</td>
+      <td>Tutup port DB; secrets kuat; segmentasi jaringan; least privilege</td>
+    </tr>
+    <tr>
+      <td class="tid">T10</td><td>Spoofing (session hijack)</td><td>P2 (sesi)</td>
+      <td><strong>Manajemen sesi lemah</strong> — cookie tanpa <code>Secure/HttpOnly/SameSite</code>, tanpa regenerasi id saat login</td>
+      <td class="c">S</td><td class="c">S</td><td class="c"><span class="badge sedang">SEDANG</span></td>
+      <td>Pembajakan sesi; peniruan identitas pengguna</td><td class="c">V10</td>
+      <td>Set cookie flags; <code>session_regenerate_id(true)</code> saat login; timeout sesi</td>
+    </tr>
+  </tbody>
+</table>
+<p><strong>Ringkasan sebaran risiko:</strong>
+   <span class="badge kritis">KRITIS = 4</span> (T1, T2, T5, T6) ·
+   <span class="badge tinggi">TINGGI = 4</span> (T3, T4, T7, T9) ·
+   <span class="badge sedang">SEDANG = 2</span> (T8, T10).</p>
+</div>
+
+<h2 class="page-break">2.6 Analisis Trust Boundary (Titik Kritis STRIDE)</h2>
+<ul>
+  <li><strong>TB-1 (Internet ⇄ DMZ):</strong> semua input dari zona <em>untrusted</em> masuk tanpa TLS, WAF, atau MFA → sumber T1, T3, T7. Ini <em>choke point</em> utama untuk penerapan Zero Trust (autentikasi kuat + inspeksi di edge).</li>
+  <li><strong>TB-2 (DMZ ⇄ App):</strong> reverse proxy meneruskan request tanpa otorisasi terpusat → memungkinkan T6 (akses <code>/admin</code> tanpa cek role). Rekomendasi: forward-auth (Authelia/Keycloak) sebagai Policy Enforcement Point.</li>
+  <li><strong>TB-3 (App ⇄ Data):</strong> proses aplikasi mengakses data store tanpa kontrol berbasis kepemilikan/role dan dengan akun DB ber-privilege tinggi → sumber T4, T5, T9. Rekomendasi: least privilege pada akun DB, validasi otorisasi per-objek.</li>
+</ul>
+
+<h2 class="avoid-break">2.7 Keselarasan dengan Zero Trust (NIST SP 800-207)</h2>
+<table class="avoid-break">
+  <thead><tr><th>Prinsip Zero Trust</th><th>Kondisi Saat Ini (Before)</th><th>Target (After Hardening)</th></tr></thead>
+  <tbody>
+    <tr><td>Verifikasi eksplisit setiap akses</td><td>Login lemah, tanpa MFA</td><td>IAM + MFA di setiap request (PEP di reverse proxy)</td></tr>
+    <tr><td>Least privilege</td><td>Akun DB root/all-privileges; role tidak ditegakkan</td><td>Akun DB minimal; RBAC/ABAC per-objek</td></tr>
+    <tr><td>Asumsi breach / mikro-segmentasi</td><td>Semua service satu jaringan, port DB terbuka</td><td>Segmentasi tier; DB tidak terekspos; TLS internal</td></tr>
+    <tr><td>Enkripsi menyeluruh</td><td>HTTP polos, MD5</td><td>TLS in-transit; Argon2id + enkripsi at-rest</td></tr>
+    <tr><td>Monitoring &amp; logging</td><td>Error bocor, tanpa deteksi</td><td>Logging terpusat; Fail2ban/WAF alerting</td></tr>
+  </tbody>
+</table>
+
+<h2 class="avoid-break">2.8 Prioritas Remediasi (masukan BAB III)</h2>
+<ol>
+  <li><strong>KRITIS dulu:</strong> hilangkan SQLi (T1, T5) dengan prepared statement + WAF; tegakkan RBAC (T6); perkuat hashing (T2).</li>
+  <li><strong>TINGGI:</strong> MFA + Fail2ban (T3), kontrol kepemilikan IDOR (T4), TLS (T7), tutup port DB &amp; least privilege (T9).</li>
+  <li><strong>SEDANG:</strong> sembunyikan error/banner (T8), perkuat sesi (T10).</li>
+</ol>
+<div class="note">Pemetaan lengkap ke OWASP Top 10 2021 tersedia pada dokumen VULN.md di repositori proyek.</div>
+
+</body>
+</html>

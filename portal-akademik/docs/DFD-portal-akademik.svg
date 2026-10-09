@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1520 1090" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#55606e"/>
+    </marker>
+    <marker id="arrowR" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#d0342c"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1520" height="1090" fill="#ffffff"/>
+
+  <!-- ===== Header ===== -->
+  <text x="40" y="46" font-size="30" font-weight="700" fill="#0f2b46">Data Flow Diagram (DFD) — Portal Akademik</text>
+  <text x="40" y="76" font-size="16" fill="#6b7a8d">Level 1 · Trust Boundary untuk analisis STRIDE · Kondisi BEFORE HARDENING · (Tn = ID ancaman, lihat matriks STRIDE)</text>
+
+  <!-- ===== Trust boundary bands (background tints) ===== -->
+  <rect x="20"   y="140" width="330" height="775" rx="10" fill="#fbeeee" stroke="#f0d3d0"/>
+  <rect x="380"  y="140" width="270" height="775" rx="10" fill="#eef3fa" stroke="#d6e2f2"/>
+  <rect x="680"  y="140" width="400" height="775" rx="10" fill="#eef7f1" stroke="#cfeadb"/>
+  <rect x="1110" y="140" width="390" height="775" rx="10" fill="#f6eefb" stroke="#e6d6f2"/>
+
+  <text x="185"  y="166" text-anchor="middle" font-size="15" font-weight="700" fill="#a13a33">ZONA PUBLIK (INTERNET)</text>
+  <text x="185"  y="184" text-anchor="middle" font-size="11" fill="#a3746f">Untrusted</text>
+  <text x="515"  y="166" text-anchor="middle" font-size="15" font-weight="700" fill="#1b5fbf">DMZ</text>
+  <text x="515"  y="184" text-anchor="middle" font-size="11" fill="#5c7aa6">Semi-trusted</text>
+  <text x="880"  y="166" text-anchor="middle" font-size="15" font-weight="700" fill="#1e9e6a">APPLICATION TIER</text>
+  <text x="880"  y="184" text-anchor="middle" font-size="11" fill="#5c9e82">Trusted (internal)</text>
+  <text x="1305" y="166" text-anchor="middle" font-size="15" font-weight="700" fill="#7d3aa1">DATA TIER</text>
+  <text x="1305" y="184" text-anchor="middle" font-size="11" fill="#9b7ab0">Trusted (restricted)</text>
+
+  <!-- ===== Trust boundary dashed lines ===== -->
+  <line x1="365"  y1="200" x2="365"  y2="900" stroke="#d0342c" stroke-width="2" stroke-dasharray="8 6"/>
+  <line x1="665"  y1="200" x2="665"  y2="900" stroke="#d0342c" stroke-width="2" stroke-dasharray="8 6"/>
+  <line x1="1095" y1="200" x2="1095" y2="900" stroke="#d0342c" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="371" y="885" font-size="12" font-weight="700" fill="#d0342c" transform="rotate(-90 371 885)">TB-1  Internet ⇄ DMZ 🔒</text>
+  <text x="671" y="885" font-size="12" font-weight="700" fill="#d0342c" transform="rotate(-90 671 885)">TB-2  DMZ ⇄ App 🔒</text>
+  <text x="1101" y="885" font-size="12" font-weight="700" fill="#d0342c" transform="rotate(-90 1101 885)">TB-3  App ⇄ Data 🔒</text>
+
+  <!-- ===== External Entities (Band A) ===== -->
+  <rect x="45" y="210" width="290" height="66" rx="4" fill="#ffffff" stroke="#33475b" stroke-width="2"/>
+  <text x="190" y="240" text-anchor="middle" font-size="16" font-weight="700" fill="#0f2b46">👩‍🎓 Mahasiswa</text>
+  <text x="190" y="261" text-anchor="middle" font-size="12" fill="#6b7a8d">External Entity · pengguna sah</text>
+
+  <rect x="45" y="330" width="290" height="66" rx="4" fill="#ffffff" stroke="#33475b" stroke-width="2"/>
+  <text x="190" y="360" text-anchor="middle" font-size="16" font-weight="700" fill="#0f2b46">🛠️ Administrator</text>
+  <text x="190" y="381" text-anchor="middle" font-size="12" fill="#6b7a8d">External Entity · pengelola</text>
+
+  <rect x="45" y="620" width="290" height="76" rx="4" fill="#fdecea" stroke="#d0342c" stroke-width="2"/>
+  <text x="190" y="652" text-anchor="middle" font-size="16" font-weight="700" fill="#b5271f">🕵️ Aktor Ancaman</text>
+  <text x="190" y="674" text-anchor="middle" font-size="12" fill="#a3564f">Attacker · tidak sah</text>
+
+  <!-- ===== Process P1 (DMZ) ===== -->
+  <rect x="410" y="300" width="210" height="130" rx="18" fill="#eaf1fb" stroke="#2d6cdf" stroke-width="2"/>
+  <text x="515" y="336" text-anchor="middle" font-size="15" font-weight="700" fill="#173d63">1.0</text>
+  <text x="515" y="360" text-anchor="middle" font-size="15" font-weight="700" fill="#173d63">Reverse Proxy</text>
+  <text x="515" y="380" text-anchor="middle" font-size="14" fill="#173d63">(Nginx)</text>
+  <text x="515" y="404" text-anchor="middle" font-size="11" fill="#b5271f">HTTP :80 — belum TLS</text>
+
+  <!-- ===== Processes (App Tier) ===== -->
+  <rect x="705" y="205" width="215" height="92" rx="16" fill="#eafaf1" stroke="#1e9e6a" stroke-width="2"/>
+  <text x="812" y="236" text-anchor="middle" font-size="14" font-weight="700" fill="#146c48">2.0  Autentikasi</text>
+  <text x="812" y="257" text-anchor="middle" font-size="13" fill="#146c48">&amp; Manajemen Sesi</text>
+  <text x="812" y="279" text-anchor="middle" font-size="11" fill="#5c9e82">login.php · session</text>
+
+  <rect x="705" y="345" width="215" height="92" rx="16" fill="#eafaf1" stroke="#1e9e6a" stroke-width="2"/>
+  <text x="812" y="376" text-anchor="middle" font-size="14" font-weight="700" fill="#146c48">3.0  Layanan KHS</text>
+  <text x="812" y="397" text-anchor="middle" font-size="13" fill="#146c48">(Kartu Hasil Studi)</text>
+  <text x="812" y="419" text-anchor="middle" font-size="11" fill="#5c9e82">nilai.php?nim=</text>
+
+  <rect x="705" y="485" width="215" height="92" rx="16" fill="#eafaf1" stroke="#1e9e6a" stroke-width="2"/>
+  <text x="812" y="516" text-anchor="middle" font-size="14" font-weight="700" fill="#146c48">4.0  Direktori</text>
+  <text x="812" y="537" text-anchor="middle" font-size="13" fill="#146c48">Mahasiswa (Search)</text>
+  <text x="812" y="559" text-anchor="middle" font-size="11" fill="#5c9e82">search.php?q=</text>
+
+  <rect x="705" y="625" width="215" height="92" rx="16" fill="#eafaf1" stroke="#1e9e6a" stroke-width="2"/>
+  <text x="812" y="656" text-anchor="middle" font-size="14" font-weight="700" fill="#146c48">5.0  Panel Admin</text>
+  <text x="812" y="677" text-anchor="middle" font-size="13" fill="#146c48">Kelola akun &amp; data</text>
+  <text x="812" y="699" text-anchor="middle" font-size="11" fill="#5c9e82">admin.php</text>
+
+  <!-- ===== Data Stores (Data Tier, Gane-Sarson) ===== -->
+  <!-- D1 users -->
+  <g>
+    <rect x="1130" y="200" width="350" height="60" fill="#fdf2e3" stroke="#d98a00" stroke-width="2"/>
+    <line x1="1178" y1="200" x2="1178" y2="260" stroke="#d98a00" stroke-width="2"/>
+    <text x="1154" y="236" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a00">D1</text>
+    <text x="1200" y="226" font-size="14" font-weight="700" fill="#8a5a00">users</text>
+    <text x="1200" y="247" font-size="11" fill="#a97c33">kredensial (MD5), role</text>
+  </g>
+  <!-- D2 mahasiswa -->
+  <g>
+    <rect x="1130" y="400" width="350" height="60" fill="#fdf2e3" stroke="#d98a00" stroke-width="2"/>
+    <line x1="1178" y1="400" x2="1178" y2="460" stroke="#d98a00" stroke-width="2"/>
+    <text x="1154" y="436" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a00">D2</text>
+    <text x="1200" y="426" font-size="14" font-weight="700" fill="#8a5a00">mahasiswa</text>
+    <text x="1200" y="447" font-size="11" fill="#a97c33">PII: nama, email, telp, alamat</text>
+  </g>
+  <!-- D3 nilai -->
+  <g>
+    <rect x="1130" y="600" width="350" height="60" fill="#fdf2e3" stroke="#d98a00" stroke-width="2"/>
+    <line x1="1178" y1="600" x2="1178" y2="660" stroke="#d98a00" stroke-width="2"/>
+    <text x="1154" y="636" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a00">D3</text>
+    <text x="1200" y="626" font-size="14" font-weight="700" fill="#8a5a00">nilai</text>
+    <text x="1200" y="647" font-size="11" fill="#a97c33">KHS per mata kuliah</text>
+  </g>
+
+  <!-- ===== Data Flows ===== -->
+  <!-- External -> P1 -->
+  <line x1="335" y1="238" x2="408" y2="330" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="300" y="300" font-size="12" fill="#33475b">1. login (user/pass)</text>
+
+  <line x1="335" y1="360" x2="408" y2="360" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="345" y="352" font-size="12" fill="#33475b">2. akses admin</text>
+
+  <line x1="335" y1="650" x2="408" y2="418" stroke="#d0342c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrowR)"/>
+  <text x="300" y="560" font-size="12" font-weight="700" fill="#b5271f">SQLi · brute force · IDOR</text>
+
+  <!-- P1 -> processes -->
+  <line x1="620" y1="335" x2="703" y2="251" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="628" y="286" font-size="12" fill="#33475b">3. fwd</text>
+  <line x1="620" y1="360" x2="703" y2="391" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="628" y="372" font-size="12" fill="#33475b">4. /nilai?nim=</text>
+  <line x1="620" y1="385" x2="703" y2="531" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="628" y="470" font-size="12" fill="#33475b">5. /search?q=</text>
+  <line x1="620" y1="410" x2="703" y2="671" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="628" y="628" font-size="12" fill="#33475b">6. /admin</text>
+
+  <!-- processes -> stores -->
+  <line x1="920" y1="245" x2="1128" y2="230" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="950" y="220" font-size="12" fill="#33475b">7. verifikasi login</text>
+
+  <line x1="920" y1="385" x2="1128" y2="430" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="945" y="405" font-size="12" fill="#33475b">8. baca profil</text>
+  <line x1="920" y1="405" x2="1128" y2="628" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="945" y="520" font-size="12" fill="#33475b">9. baca nilai</text>
+
+  <line x1="920" y1="531" x2="1128" y2="440" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="945" y="500" font-size="12" fill="#33475b">10. cari nama</text>
+
+  <line x1="920" y1="660" x2="1128" y2="250" stroke="#d0342c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrowR)"/>
+  <text x="945" y="640" font-size="12" font-weight="700" fill="#b5271f">11. dump akun (broken access)</text>
+  <line x1="920" y1="685" x2="1128" y2="450" stroke="#d0342c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrowR)"/>
+  <text x="945" y="700" font-size="12" font-weight="700" fill="#b5271f">12. dump PII</text>
+
+  <!-- ===== Threat badges (Tn) ===== -->
+  <g font-size="12" font-weight="700" fill="#ffffff">
+    <g><rect x="470" y="255" width="30" height="20" rx="4" fill="#d0342c"/><text x="485" y="270" text-anchor="middle">T1</text></g>
+    <g><rect x="504" y="255" width="30" height="20" rx="4" fill="#d0342c"/><text x="519" y="270" text-anchor="middle">T3</text></g>
+    <g><rect x="336" y="205" width="30" height="20" rx="4" fill="#d0342c"/><text x="351" y="220" text-anchor="middle">T7</text></g>
+    <g><rect x="512" y="270" width="30" height="20" rx="4" fill="#d0342c"/><text x="527" y="285" text-anchor="middle">T8</text></g>
+    <g><rect x="1096" y="204" width="30" height="20" rx="4" fill="#d0342c"/><text x="1111" y="219" text-anchor="middle">T2</text></g>
+    <g><rect x="884" y="205" width="34" height="20" rx="4" fill="#d0342c"/><text x="901" y="220" text-anchor="middle">T10</text></g>
+    <g><rect x="884" y="345" width="30" height="20" rx="4" fill="#d0342c"/><text x="899" y="360" text-anchor="middle">T4</text></g>
+    <g><rect x="884" y="485" width="30" height="20" rx="4" fill="#d0342c"/><text x="899" y="500" text-anchor="middle">T5</text></g>
+    <g><rect x="884" y="625" width="30" height="20" rx="4" fill="#d0342c"/><text x="899" y="640" text-anchor="middle">T6</text></g>
+    <g><rect x="1096" y="600" width="30" height="20" rx="4" fill="#d0342c"/><text x="1111" y="615" text-anchor="middle">T9</text></g>
+  </g>
+
+  <!-- ===== Legend ===== -->
+  <rect x="20" y="935" width="1480" height="135" rx="10" fill="#f7f9fc" stroke="#e2e8f0"/>
+  <text x="40" y="962" font-size="14" font-weight="700" fill="#0f2b46">Legenda</text>
+
+  <rect x="40" y="978" width="34" height="24" rx="3" fill="#ffffff" stroke="#33475b" stroke-width="2"/>
+  <text x="86" y="995" font-size="13" fill="#33475b">External Entity</text>
+
+  <rect x="230" y="978" width="34" height="24" rx="10" fill="#eafaf1" stroke="#1e9e6a" stroke-width="2"/>
+  <text x="276" y="995" font-size="13" fill="#33475b">Process</text>
+
+  <rect x="390" y="978" width="34" height="24" fill="#fdf2e3" stroke="#d98a00" stroke-width="2"/>
+  <line x1="400" y1="978" x2="400" y2="1002" stroke="#d98a00" stroke-width="2"/>
+  <text x="436" y="995" font-size="13" fill="#33475b">Data Store</text>
+
+  <line x1="560" y1="990" x2="612" y2="990" stroke="#55606e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="622" y="995" font-size="13" fill="#33475b">Data flow (normal)</text>
+
+  <line x1="800" y1="990" x2="852" y2="990" stroke="#d0342c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrowR)"/>
+  <text x="862" y="995" font-size="13" fill="#33475b">Flow berisiko / serangan</text>
+
+  <line x1="1080" y1="978" x2="1080" y2="1004" stroke="#d0342c" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="1096" y="995" font-size="13" fill="#33475b">Trust boundary</text>
+
+  <rect x="1250" y="980" width="30" height="20" rx="4" fill="#d0342c"/>
+  <text x="1265" y="995" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Tn</text>
+  <text x="1290" y="995" font-size="13" fill="#33475b">ID ancaman (matriks STRIDE)</text>
+
+  <text x="40" y="1035" font-size="12" fill="#6b7a8d">Titik STRIDE terpenting berada di persilangan Trust Boundary: input dari zona Untrusted melewati TB-1 tanpa TLS/WAF/MFA,</text>
+  <text x="40" y="1053" font-size="12" fill="#6b7a8d">lalu proses App mengakses Data Tier (TB-3) tanpa kontrol otorisasi berbasis kepemilikan/role — sumber utama Spoofing, Tampering, Information Disclosure, dan Elevation of Privilege.</text>
+</svg>

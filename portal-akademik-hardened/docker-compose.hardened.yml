@@ -1,0 +1,105 @@
+# =====================================================================
+#  Portal Akademik - Docker Compose (AFTER HARDENING)
+#
+#  Topologi (Defense-in-Depth + segmentasi jaringan):
+#    Internet
+#      -> proxy  (Nginx: TLS, security headers, forward-auth Authelia)   [net: edge]
+#      -> waf    (ModSecurity + OWASP CRS)                               [net: edge+internal]
+#      -> app    (PHP hardened: prepared stmt, Argon2id, RBAC, IDOR fix) [net: internal]
+#      -> db     (MariaDB: least-privilege, TIDAK diekspos ke host)      [net: internal]
+#      authelia  (IAM/SSO + MFA TOTP)                                    [net: edge]
+#      fail2ban  (ban IP brute force di lapisan jaringan)
+#
+#  Jalankan:  docker compose -f docker-compose.hardened.yml --env-file .env up -d --build
+#  Akses   :  https://portal.local   (tambahkan ke hosts: 127.0.0.1 portal.local)
+# =====================================================================
+
+services:
+
+  db:
+    image: mariadb:10.11
+    container_name: portal-h-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: portal_akademik
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - db_data:/var/lib/mysql
+    networks: [internal]            # fix T9: tanpa blok ports -> DB tidak terekspos ke host
+
+  app:
+    build: ./app
+    container_name: portal-h-app
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_USER: portal_app           # akun least-privilege (fix T9)
+      DB_PASS: ${APP_DB_PASSWORD}
+      DB_NAME: portal_akademik
+      APP_KEY: ${APP_KEY}           # kunci AES-256-GCM untuk PII (harus cocok init.sql)
+    depends_on: [db]
+    volumes:
+      - portal_logs:/var/log/portal # log dibaca Fail2ban
+    networks: [internal]
+
+  waf:
+    image: owasp/modsecurity-crs:nginx
+    container_name: portal-h-waf
+    restart: unless-stopped
+    environment:
+      BACKEND: "http://app:80"
+      MODSEC_RULE_ENGINE: "On"      # WAF aktif memblokir (fix T1/T5 lapisan edge)
+      PARANOIA: "1"
+      ANOMALY_INBOUND: "5"
+      ANOMALY_OUTBOUND: "4"
+      PORT: "8080"
+    depends_on: [app]
+    networks: [edge, internal]
+
+  authelia:
+    image: authelia/authelia:4.38
+    container_name: portal-h-authelia
+    restart: unless-stopped
+    volumes:
+      - ./authelia:/config
+    networks: [edge]
+
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: portal-h-proxy
+    restart: unless-stopped
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on: [app, waf, authelia]
+    networks: [edge]
+
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    container_name: portal-h-fail2ban
+    restart: unless-stopped
+    network_mode: host             # perlu host netns agar ban iptables efektif
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - ./fail2ban/jail.d:/etc/fail2ban/jail.d:ro
+      - ./fail2ban/filter.d:/etc/fail2ban/filter.d:ro
+      - portal_logs:/var/log/portal:ro
+      - nginx_logs:/var/log/nginx:ro
+
+volumes:
+  db_data:
+  portal_logs:
+  nginx_logs:
+
+networks:
+  edge:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: true                  # fix T9: segmen data tidak punya rute keluar

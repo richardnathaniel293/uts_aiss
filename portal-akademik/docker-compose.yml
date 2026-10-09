@@ -1,0 +1,65 @@
+# =====================================================================
+#  Portal Akademik - Docker Compose
+#  Versi: BEFORE HARDENING (baseline rentan untuk Vulnerability Assessment)
+#
+#  Topologi:
+#     [ host :8080 ] -> nginx (reverse proxy) -> app (PHP/Apache) -> db (MariaDB)
+#
+#  Jalankan:  docker compose up -d --build
+#  Akses   :  http://localhost:8080
+# =====================================================================
+
+services:
+
+  db:
+    image: mariadb:10.11
+    container_name: portal-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root123           # [VULN] password root lemah
+      MARIADB_DATABASE: portal_akademik
+      MARIADB_USER: portal
+      MARIADB_PASSWORD: portal123              # [VULN] kredensial lemah & hardcoded
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - db_data:/var/lib/mysql
+    # [VULN - reduce attack surface] port DB diekspos ke host (tidak perlu).
+    # Saat hardening: hapus blok ports ini agar DB hanya diakses via jaringan internal.
+    ports:
+      - "3306:3306"
+    networks:
+      - portalnet
+
+  app:
+    build: ./app
+    container_name: portal-app
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_USER: portal
+      DB_PASS: portal123
+      DB_NAME: portal_akademik
+    depends_on:
+      - db
+    networks:
+      - portalnet
+
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: portal-proxy
+    restart: unless-stopped
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"                              # HTTP saja (belum TLS)
+    depends_on:
+      - app
+    networks:
+      - portalnet
+
+volumes:
+  db_data:
+
+networks:
+  portalnet:
+    driver: bridge

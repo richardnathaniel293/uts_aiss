@@ -1,0 +1,59 @@
+# =====================================================================
+#  Authelia - IAM/SSO + MFA (forward-auth di Nginx)  -> fix T3 (brute force) & T6
+#  Diuji untuk authelia v4.38. Secret di bawah WAJIB diganti untuk produksi.
+# =====================================================================
+server:
+  address: 'tcp://0.0.0.0:9091/authelia'   # portal disajikan di sub-path /authelia
+
+log:
+  level: 'info'
+
+totp:
+  issuer: 'portal.local'                    # MFA berbasis TOTP (Google Authenticator, dsb.)
+
+identity_validation:
+  reset_password:
+    jwt_secret: 'GANTI_jwt_secret_minimal_32_karakter_xxx'
+
+authentication_backend:
+  file:
+    path: '/config/users_database.yml'
+    password:
+      algorithm: 'argon2'
+
+access_control:
+  default_policy: 'deny'
+  rules:
+    # Area admin wajib MFA (two_factor) -> step-up authentication
+    - domain: 'portal.local'
+      resources:
+        - '^/admin\.php$'
+      policy: 'two_factor'
+    # Sisanya cukup satu faktor (SSO) — tetap memaksa autentikasi kuat di edge
+    - domain: 'portal.local'
+      policy: 'one_factor'
+
+session:
+  secret: 'GANTI_session_secret_minimal_32_karakter'
+  cookies:
+    - domain: 'portal.local'
+      authelia_url: 'https://portal.local/authelia'
+      default_redirection_url: 'https://portal.local/'
+      expiration: '1h'
+      inactivity: '15m'
+
+regulation:
+  # Anti brute force bawaan IAM -> fix T3
+  max_retries: 3
+  find_time: '2m'
+  ban_time: '10m'
+
+storage:
+  encryption_key: 'GANTI_storage_encryption_key_min_20_char'
+  local:
+    path: '/config/db.sqlite3'
+
+notifier:
+  # Lab: link registrasi TOTP ditulis ke file (bukan email)
+  filesystem:
+    filename: '/config/notification.txt'
